@@ -1,54 +1,83 @@
 <template>
-    <div>
-      <h2>Lista de Tarefas</h2>
-      <TodoForm />
-  
-      <div class="filters">
-        <button @click="filter = 'all'">Todas</button>
-        <button @click="filter = 'pending'">Pendentes</button>
-        <button @click="filter = 'completed'">Concluídas</button>
-      </div>
-  
-      <ul>
-        <li v-for="todo in filteredTodos" :key="todo.id">
-          <input type="checkbox" v-model="todo.completed" @change="toggleTodo(todo.id)" />
+  <div class="todo-container">
+    <h2>Lista de Tarefas</h2>
+    <TodoForm />
+
+    <ul class="todo-list">
+      <li v-for="todo in todos" :key="todo.id" class="todo-item">
+        <input type="checkbox" :checked="todo.completed" @change="toggleTodo(todo.id)" class="custom-checkbox" />
+        
+        <div class="task-details">
           <span :class="{ done: todo.completed }">{{ todo.text }}</span>
-          <button @click="removeTodo(todo.id)">❌</button>
-        </li>
-      </ul>
-    </div>
-  </template>
-  
-  <script setup>
-  import { useTodoStore } from '@/store/todoStore';
-  import { storeToRefs } from 'pinia';
-  import { computed, ref } from 'vue';
-  import TodoForm from './TodoForm.vue';
-  
-  const store = useTodoStore();
-  const { todos } = storeToRefs(store);
-  const { toggleTodo, removeTodo } = store;
-  
-  const filter = ref('all');
-  
-  const filteredTodos = computed(() => {
-    if (filter.value === 'pending') return todos.value.filter(t => !t.completed);
-    if (filter.value === 'completed') return todos.value.filter(t => t.completed);
-    return todos.value; // 'all'
-  });
-  </script>
-  
-  <style scoped>
-  .done {
-    text-decoration: line-through;
-    color: gray;
-  }
-  .filters {
-    margin-bottom: 10px;
-  }
-  .filters button {
-    margin-right: 5px;
-    cursor: pointer;
-  }
-  </style>
-  
+          <small v-if="todo.dueDate" class="due-date">📅 {{ formatDate(todo.dueDate) }}</small>
+        </div>
+
+        <button @click="removeTodo(todo.id)" class="delete-btn">❌</button>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script setup>
+import { useTodoStore } from '@/store/todoStore';
+import { storeToRefs } from 'pinia';
+import TodoForm from './TodoForm.vue';
+
+const store = useTodoStore();
+const { todos } = storeToRefs(store);
+const { toggleTodo, removeTodo } = store;
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+};
+</script>
+
+<style scoped>
+.todo-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  transition: background 0.3s;
+}
+
+.task-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.due-date {
+  font-size: 12px;
+  color: gray;
+}
+
+/* Checkbox customizado */
+.custom-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  accent-color: #007bff;
+  cursor: pointer;
+}
+
+/* Tarefas concluídas */
+.done {
+  text-decoration: line-through;
+  color: gray;
+}
+
+/* Botão "❌" escondido até passar o mouse */
+.delete-btn {
+  background: none;
+  border: none;
+  color: red;
+  font-size: 16px;
+  cursor: pointer;
+  display: none;
+  left: 100%;
+}
+
+.todo-item:hover .delete-btn {
+  display: block;
+}
+</style>

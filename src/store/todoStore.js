@@ -1,11 +1,18 @@
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 
-export const useTodoStore = defineStore('todo', () => {
-  const todos = ref(JSON.parse(localStorage.getItem('todos')) || []);
+export const useTodoStore = defineStore('todoStore', () => {
+  const todos = ref([]);
 
-  const addTodo = (text) => {
-    todos.value.push({ id: Date.now(), text, completed: false });
+  const addTodo = (todo) => {
+    todos.value.push({
+      id: Date.now(),
+      text: todo.text,
+      completed: false,
+      dueDate: todo.dueDate, // Salvar a data opcionalmente
+    });
+
+    sortTodos();
   };
 
   const toggleTodo = (id) => {
@@ -14,13 +21,17 @@ export const useTodoStore = defineStore('todo', () => {
   };
 
   const removeTodo = (id) => {
-    todos.value = todos.value.filter(t => t.id !== id);
+    todos.value = todos.value.filter(todo => todo.id !== id);
   };
 
-  // 🚀 **Salvar no LocalStorage sempre que as tarefas mudarem**
-  watch(todos, (newTodos) => {
-    localStorage.setItem('todos', JSON.stringify(newTodos));
-  }, { deep: true });
+  // Ordena por data (tarefas sem data ficam no final)
+  const sortTodos = () => {
+    todos.value.sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    });
+  };
 
   return { todos, addTodo, toggleTodo, removeTodo };
 });
